@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LayerUp — Poster</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 32px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .poster {
+    width: 794px;
+    height: 1123px;
+    background: #0d0d0d;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  /* BG GRID */
+  .poster-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,107,43,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,107,43,0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* ORANGE GLOW BLOBS */
+  .glow1 {
+    position: absolute;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,107,43,0.15) 0%, transparent 70%);
+    top: -100px; right: -100px;
+    pointer-events: none;
+  }
+
+  .glow2 {
+    position: absolute;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,107,43,0.08) 0%, transparent 70%);
+    bottom: 100px; left: -80px;
+    pointer-events: none;
+  }
+
+  /* TOP STRIP */
+  .top-strip {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #ff6b2b, #ff8c52, #ff6b2b);
+  }
+
+  /* MAIN CONTENT */
+  .content {
+    position: relative;
+    z-index: 2;
+    padding: 52px 52px 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER ROW */
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 48px;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px;
+    letter-spacing: 4px;
+    color: #e8e8e8;
+  }
+
+  .logo span { color: #ff6b2b; }
+
+  .top-tag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(255,107,43,0.35);
+    padding: 6px 14px;
+    border-radius: 2px;
+  }
+
+  .top-tag-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #ff6b2b;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .top-tag span {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #ff6b2b;
+  }
+
+  /* HERO TEXT */
+  .hero-text {
+    margin-bottom: 36px;
+  }
+
+  .pre-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 12px;
+  }
+
+  .pre-label::before { content: '// '; }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 110px;
+    line-height: 0.88;
+    letter-spacing: 2px;
+    color: #e8e8e8;
+  }
+
+  h1 .accent {
+    color: #ff6b2b;
+    display: block;
+  }
+
+  .tagline {
+    margin-top: 20px;
+    font-size: 16px;
+    font-weight: 300;
+    color: #888;
+    max-width: 420px;
+    line-height: 1.6;
+    letter-spacing: 0.2px;
+  }
+
+  /* 3D VISUAL — layer diagram */
+  .print-visual {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+    position: absolute;
+    right: 52px;
+    top: 200px;
+    pointer-events: none;
+  }
+
+  /* SERVICES BAND */
+  .services-band {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    margin-bottom: 32px;
+  }
+
+  .svc {
+    background: #131313;
+    border: 1px solid #252525;
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .svc::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 2px; height: 100%;
+    background: #ff6b2b;
+    opacity: 0.5;
+  }
+
+  .svc-icon { font-size: 22px; margin-bottom: 10px; }
+
+  .svc-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 1.5px;
+    color: #e8e8e8;
+    margin-bottom: 6px;
+  }
+
+  .svc-desc {
+    font-size: 11px;
+    color: #666;
+    line-height: 1.5;
+  }
+
+  .svc-price {
+    margin-top: 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: #ff6b2b;
+  }
+
+  /* SPECS ROW */
+  .specs-row {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 32px;
+  }
+
+  .spec {
+    flex: 1;
+    background: rgba(255,107,43,0.06);
+    border: 1px solid rgba(255,107,43,0.2);
+    padding: 16px 18px;
+    text-align: center;
+  }
+
+  .spec-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    color: #ff6b2b;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .spec-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #666;
+  }
+
+  /* BOTTOM CTA */
+  .cta-bar {
+    background: #ff6b2b;
+    margin: 0 -52px;
+    padding: 28px 52px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+  }
+
+  .cta-left h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 38px;
+    color: #000;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+
+  .cta-left p {
+    font-size: 13px;
+    color: rgba(0,0,0,0.65);
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  .cta-right {
+    text-align: right;
+  }
+
+  .cta-contact {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: #000;
+    letter-spacing: 1px;
+    line-height: 1.8;
+  }
+
+  .cta-location {
+    font-size: 11px;
+    color: rgba(0,0,0,0.55);
+    margin-top: 4px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* SVG PRINTER */
+  .printer-svg {
+    position: absolute;
+    right: 40px;
+    top: 180px;
+    opacity: 0.12;
+    width: 320px;
+  }
+</style>
+</head>
+<body>
+
+<div class="poster">
+  <div class="poster-grid"></div>
+  <div class="glow1"></div>
+  <div class="glow2"></div>
+  <div class="top-strip"></div>
+
+  <!-- Decorative SVG print layers -->
+  <svg class="printer-svg" viewBox="0 0 300 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Stacked layers representing a 3D print -->
+    <rect x="60" y="230" width="180" height="10" rx="1" fill="#ff6b2b"/>
+    <rect x="70" y="218" width="160" height="10" rx="1" fill="#ff6b2b"/>
+    <rect x="80" y="206" width="140" height="10" rx="1" fill="#ff6b2b"/>
+    <rect x="88" y="194" width="124" height="10" rx="1" fill="#ff6b2b"/>
+    <rect x="94" y="182" width="112" height="10" rx="1" fill="#ff6b2b"/>
+    <rect x="100" y="170" width="100" height="10" rx="1" fill="#ff6b2b"/>
+    <rect x="105" y="158" width="90" height="10" rx="1" fill="#ff6b2b"/>
+    <rect x="110" y="146" width="80" height="10" rx="1" fill="#ff6b2b"/>
+    <rect x="114" y="134" width="72" height="10" rx="1" fill="#ff6b2b"/>
+    <rect x="118" y="122" width="64" height="10" rx="1" fill="#ff6b2b"/>
+    <rect x="121" y="110" width="58" height="10" rx="1" fill="#ff6b2b"/>
+    <rect x="124" y="98" width="52" height="10" rx="1" fill="#ff6b2b"/>
+    <rect x="128" y="86" width="44" height="10" rx="1" fill="#ff6b2b"/>
+    <rect x="132" y="74" width="36" height="10" rx="1" fill="#ff6b2b"/>
+    <rect x="136" y="62" width="28" height="10" rx="1" fill="#ff6b2b"/>
+    <rect x="140" y="50" width="20" height="10" rx="1" fill="#ff6b2b"/>
+    <!-- Print head -->
+    <rect x="20" y="30" width="260" height="8" rx="2" fill="#ff6b2b" opacity="0.8"/>
+    <rect x="143" y="38" width="14" height="16" rx="1" fill="#ff6b2b"/>
+    <line x1="150" y1="54" x2="150" y2="50" stroke="#ff6b2b" stroke-width="2"/>
+  </svg>
+
+  <div class="content">
+    <div class="header-row">
+      <div class="logo">Layer<span>Up</span></div>
+      <div class="top-tag">
+        <div class="top-tag-dot"></div>
+        <span>Abbotsford, BC — Open for Orders</span>
+      </div>
+    </div>
+
+    <div class="hero-text">
+      <div class="pre-label">Custom 3D Printing Service</div>
+      <h1>
+        PRINT
+        <span class="accent">ANYTHING.</span>
+      </h1>
+      <p class="tagline">Professional FDM printing for custom parts, creative projects, and everything in between. Fast turnaround, fair prices.</p>
+    </div>
+
+    <div class="services-band">
+      <div class="svc">
+        <div class="svc-icon">🔧</div>
+        <div class="svc-name">Functional Parts</div>
+        <div class="svc-desc">Mounts, brackets, clips, replacement components</div>
+        <div class="svc-price">From $8 CAD</div>
+      </div>
+      <div class="svc">
+        <div class="svc-icon">🎨</div>
+        <div class="svc-name">Custom Designs</div>
+        <div class="svc-desc">Desk accessories, displays, nameplates & more</div>
+        <div class="svc-price">From $15 CAD</div>
+      </div>
+      <div class="svc">
+        <div class="svc-icon">📂</div>
+        <div class="svc-name">Print Your File</div>
+        <div class="svc-desc">Send an STL and get a clean finished print</div>
+        <div class="svc-price">From $5 CAD</div>
+      </div>
+    </div>
+
+    <div class="specs-row">
+      <div class="spec">
+        <div class="spec-num">48H</div>
+        <div class="spec-label">Avg Turnaround</div>
+      </div>
+      <div class="spec">
+        <div class="spec-num">PLA</div>
+        <div class="spec-label">Quality Filament</div>
+      </div>
+      <div class="spec">
+        <div class="spec-num">0.2mm</div>
+        <div class="spec-label">Layer Resolution</div>
+      </div>
+      <div class="spec">
+        <div class="spec-num">256mm</div>
+        <div class="spec-label">Max Print Size</div>
+      </div>
+    </div>
+
+    <div class="cta-bar">
+      <div class="cta-left">
+        <h2>Ready to print?</h2>
+        <p>Message to get a quote — no commitment.</p>
+      </div>
+      <div class="cta-right">
+        <div class="cta-contact">
+          layerupprints@gmail.com<br>
+          website: LayerUp.ca (coming soon)
+        </div>
+        <div class="cta-location">Abbotsford, BC · Cash & E-Transfer</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

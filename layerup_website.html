@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LayerUp — Custom 3D Printing</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --bg2: #131313;
+    --bg3: #1a1a1a;
+    --border: #252525;
+    --orange: #ff6b2b;
+    --orange2: #ff8c52;
+    --text: #e8e8e8;
+    --muted: #666;
+    --muted2: #444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.5;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 48px;
+    background: rgba(13,13,13,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: var(--text);
+  }
+
+  .nav-logo span { color: var(--orange); }
+
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 36px;
+  }
+
+  nav ul a {
+    color: var(--muted);
+    text-decoration: none;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  nav ul a:hover { color: var(--orange); }
+
+  .nav-cta {
+    background: var(--orange);
+    color: #000 !important;
+    padding: 8px 20px;
+    font-weight: 700 !important;
+    border-radius: 2px;
+  }
+
+  .nav-cta:hover { background: var(--orange2); color: #000 !important; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 120px 48px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,107,43,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,107,43,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,107,43,0.12) 0%, transparent 70%);
+    top: 50%; left: 60%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .hero-content {
+    max-width: 720px;
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,107,43,0.1);
+    border: 1px solid rgba(255,107,43,0.3);
+    color: var(--orange);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 2px;
+    margin-bottom: 28px;
+  }
+
+  .hero-tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--orange);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(72px, 10vw, 130px);
+    line-height: 0.9;
+    letter-spacing: 2px;
+    margin-bottom: 28px;
+  }
+
+  .hero h1 .line2 {
+    color: var(--orange);
+    display: block;
+    -webkit-text-stroke: 1px var(--orange);
+  }
+
+  .hero p {
+    font-size: 17px;
+    line-height: 1.7;
+    color: #aaa;
+    max-width: 480px;
+    margin-bottom: 40px;
+    font-weight: 300;
+  }
+
+  .hero-btns {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .btn-primary {
+    background: var(--orange);
+    color: #000;
+    padding: 14px 32px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-decoration: none;
+    border-radius: 2px;
+    transition: all 0.2s;
+    display: inline-block;
+  }
+
+  .btn-primary:hover {
+    background: var(--orange2);
+    transform: translateY(-1px);
+  }
+
+  .btn-ghost {
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    text-decoration: none;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--muted2);
+    padding-bottom: 2px;
+    transition: all 0.2s;
+  }
+
+  .btn-ghost:hover { color: var(--text); border-color: var(--text); }
+
+  .hero-stats {
+    display: flex;
+    gap: 48px;
+    margin-top: 72px;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    color: var(--orange);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-top: 4px;
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+  }
+
+  /* SECTION COMMONS */
+  section { padding: 100px 48px; }
+
+  .section-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 16px;
+  }
+
+  .section-tag::before { content: '// '; }
+
+  h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(42px, 6vw, 72px);
+    letter-spacing: 2px;
+    line-height: 1;
+    margin-bottom: 24px;
+  }
+
+  /* SERVICES */
+  .services { background: var(--bg2); }
+
+  .services-intro {
+    max-width: 600px;
+    font-size: 16px;
+    color: #aaa;
+    line-height: 1.8;
+    margin-bottom: 64px;
+    font-weight: 300;
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+
+  .service-card {
+    background: var(--bg3);
+    padding: 40px 36px;
+    border: 1px solid var(--border);
+    transition: border-color 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .service-card::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 2px;
+    width: 0;
+    background: var(--orange);
+    transition: width 0.4s ease;
+  }
+
+  .service-card:hover::before { width: 100%; }
+  .service-card:hover { border-color: rgba(255,107,43,0.3); }
+
+  .service-icon {
+    font-size: 32px;
+    margin-bottom: 20px;
+  }
+
+  .service-card h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+
+  .service-card p {
+    font-size: 14px;
+    color: #888;
+    line-height: 1.7;
+  }
+
+  .service-price {
+    margin-top: 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--orange);
+    letter-spacing: 1px;
+  }
+
+  /* CALCULATOR */
+  .calculator { background: var(--bg); }
+
+  .calc-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    max-width: 1000px;
+    margin-top: 56px;
+  }
+
+  .calc-intro {
+    max-width: 480px;
+    font-size: 16px;
+    color: #888;
+    line-height: 1.8;
+    margin-bottom: 0;
+    font-weight: 300;
+  }
+
+  .calc-panel {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 36px;
+  }
+
+  .calc-group {
+    margin-bottom: 20px;
+  }
+
+  .calc-group label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .calc-group label span {
+    color: var(--orange);
+    font-size: 10px;
+  }
+
+  .calc-group input[type="number"] {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    outline: none;
+    border-radius: 2px;
+    transition: border-color 0.2s;
+    -moz-appearance: textfield;
+  }
+
+  .calc-group input[type="number"]::-webkit-inner-spin-button,
+  .calc-group input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  .calc-group input:focus { border-color: var(--orange); }
+
+  .calc-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 24px 0;
+  }
+
+  .calc-results {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 36px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .result-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 28px;
+  }
+
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .result-row:last-of-type { border-bottom: none; }
+
+  .result-label {
+    font-size: 13px;
+    color: #888;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .result-label .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--muted2);
+    flex-shrink: 0;
+  }
+
+  .result-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .result-total {
+    margin-top: 24px;
+    padding: 20px;
+    background: rgba(255,107,43,0.08);
+    border: 1px solid rgba(255,107,43,0.25);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .result-total-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--orange);
+  }
+
+  .result-total-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    color: var(--orange);
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  .result-suggest {
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+  }
+
+  .result-suggest-label {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .result-suggest-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .markup-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .markup-control input[type="range"] {
+    flex: 1;
+    accent-color: var(--orange);
+    height: 2px;
+    cursor: pointer;
+  }
+
+  .markup-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--orange);
+    min-width: 36px;
+    text-align: right;
+  }
+
+  /* HOW IT WORKS */
+  .how { background: var(--bg2); }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    margin-top: 56px;
+  }
+
+  .step {
+    padding: 36px 28px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    position: relative;
+  }
+
+  .step-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 72px;
+    color: rgba(255,107,43,0.1);
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+
+  .step h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .step p {
+    font-size: 13px;
+    color: #777;
+    line-height: 1.7;
+  }
+
+  /* CONTACT */
+  .contact { background: var(--bg); }
+
+  .contact-inner {
+    max-width: 680px;
+  }
+
+  .contact-intro {
+    font-size: 16px;
+    color: #888;
+    line-height: 1.8;
+    margin-bottom: 48px;
+    font-weight: 300;
+  }
+
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+
+  .form-group label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    border-radius: 2px;
+    transition: border-color 0.2s;
+    resize: vertical;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus { border-color: var(--orange); }
+
+  .form-group select option { background: var(--bg3); }
+
+  .form-submit {
+    background: var(--orange);
+    color: #000;
+    border: none;
+    padding: 16px 40px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 2px;
+    align-self: flex-start;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .form-submit:hover { background: var(--orange2); transform: translateY(-1px); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 36px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg2);
+  }
+
+  footer .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    color: var(--text);
+  }
+
+  footer .logo span { color: var(--orange); }
+
+  footer p {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  @media (max-width: 900px) {
+    nav { padding: 16px 24px; }
+    nav ul { display: none; }
+    section { padding: 72px 24px; }
+    .hero { padding: 100px 24px 60px; }
+    .services-grid { grid-template-columns: 1fr; }
+    .calc-wrap { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 12px; text-align: center; }
+    .hero-stats { flex-wrap: wrap; gap: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Layer<span>Up</span></div>
+  <ul>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#calculator">Calculator</a></li>
+    <li><a href="#how">Process</a></li>
+    <li><a href="#contact" class="nav-cta">Get a Quote</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="hero-tag">Abbotsford, BC — Available Now</div>
+    <h1>
+      Custom
+      <span class="line2">3D Prints.</span>
+    </h1>
+    <p>From functional parts to one-of-a-kind designs — professional 3D printing with fast turnaround, low cost, and attention to detail.</p>
+    <div class="hero-btns">
+      <a href="#contact" class="btn-primary">Order a Print</a>
+      <a href="#calculator" class="btn-ghost">Estimate Your Cost</a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="stat-num">48H</div>
+        <div class="stat-label">Avg Turnaround</div>
+      </div>
+      <div>
+        <div class="stat-num">PLA</div>
+        <div class="stat-label">High-Quality Filament</div>
+      </div>
+      <div>
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Custom Designs</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="services" id="services">
+  <div class="section-tag">What We Do</div>
+  <h2>Services</h2>
+  <p class="services-intro">Whether you need a prototype, a replacement part, or something completely custom — LayerUp delivers reliable prints with quality materials at fair prices.</p>
+
+  <div class="services-grid">
+    <div class="service-card">
+      <div class="service-icon">🔧</div>
+      <h3>Functional Parts</h3>
+      <p>Brackets, mounts, clips, replacement components. If it broke, or doesn't exist — we can print it. Designed to spec, built to last.</p>
+      <div class="service-price">Starting at ~$8 CAD</div>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">🎨</div>
+      <h3>Custom Designs</h3>
+      <p>Have an idea but no model? We can design it from scratch. Phone stands, desk organizers, nameplates, and more.</p>
+      <div class="service-price">Starting at ~$15 CAD</div>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">📦</div>
+      <h3>Your File, Printed</h3>
+      <p>Got an STL or 3MF? Send it over and we'll print it. Fast turnaround, clean prints, supports removed and ready to use.</p>
+      <div class="service-price">Starting at ~$5 CAD</div>
+    </div>
+  </div>
+</section>
+
+<!-- CALCULATOR -->
+<section class="calculator" id="calculator">
+  <div class="section-tag">Pricing Tool</div>
+  <h2>Print Cost Calculator</h2>
+
+  <div class="calc-wrap">
+    <div class="calc-panel">
+      <div class="calc-group">
+        <label>Print Time <span id="lbl-hours">hrs</span></label>
+        <input type="number" id="i-hours" value="4" min="0.1" step="0.5" oninput="calc()">
+      </div>
+      <div class="calc-group">
+        <label>Filament Used <span>grams</span></label>
+        <input type="number" id="i-grams" value="80" min="1" step="5" oninput="calc()">
+      </div>
+      <div class="calc-divider"></div>
+      <div class="calc-group">
+        <label>Filament Cost <span>$/kg CAD</span></label>
+        <input type="number" id="i-filcost" value="28" min="1" step="1" oninput="calc()">
+      </div>
+      <div class="calc-group">
+        <label>Electricity Rate <span>¢/kWh — BC Hydro ~12¢</span></label>
+        <input type="number" id="i-elec" value="0.12" min="0.01" step="0.01" oninput="calc()">
+      </div>
+      <div class="calc-group">
+        <label>Printer Wattage <span>W</span></label>
+        <input type="number" id="i-watts" value="100" min="10" step="10" oninput="calc()">
+      </div>
+      <div class="calc-group">
+        <label>Labor Rate <span>$/hr CAD</span></label>
+        <input type="number" id="i-labor" value="18" min="0" step="1" oninput="calc()">
+      </div>
+      <div class="calc-group">
+        <label>Maintenance <span>$/hr CAD</span></label>
+        <input type="number" id="i-maint" value="0.75" min="0" step="0.25" oninput="calc()">
+      </div>
+      <div class="calc-divider"></div>
+      <div class="calc-group">
+        <label>Markup <span class="markup-val" id="lbl-markup">40%</span></label>
+        <div class="markup-control">
+          <input type="range" id="i-markup" min="0" max="200" value="40" oninput="updateMarkup();calc()">
+        </div>
+      </div>
+    </div>
+
+    <div class="calc-results">
+      <div>
+        <div class="result-title">// Cost Breakdown</div>
+        <div class="result-row">
+          <div class="result-label"><div class="dot" style="background:#ff6b2b"></div>Filament</div>
+          <div class="result-val" id="r-fil">$0.00</div>
+        </div>
+        <div class="result-row">
+          <div class="result-label"><div class="dot" style="background:#f0a500"></div>Electricity</div>
+          <div class="result-val" id="r-elec">$0.00</div>
+        </div>
+        <div class="result-row">
+          <div class="result-label"><div class="dot" style="background:#5b8dd9"></div>Labor</div>
+          <div class="result-val" id="r-labor">$0.00</div>
+        </div>
+        <div class="result-row">
+          <div class="result-label"><div class="dot" style="background:#888"></div>Maintenance</div>
+          <div class="result-val" id="r-maint">$0.00</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="result-total">
+          <div class="result-total-label">Suggested Price</div>
+          <div class="result-total-val" id="r-total">$0.00</div>
+        </div>
+        <div class="result-suggest">
+          <div class="result-suggest-label">Raw Cost (no markup)</div>
+          <div class="result-suggest-val" id="r-cost">$0.00</div>
+        </div>
+        <div class="result-suggest" style="margin-top:8px">
+          <div class="result-suggest-label">Profit on this print</div>
+          <div class="result-suggest-val" id="r-profit">$0.00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="section-tag">The Process</div>
+  <h2>How It Works</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <h3>Send Your Idea</h3>
+      <p>Fill out the form below or message directly. Describe what you need — or send an STL file if you have one.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <h3>Get a Quote</h3>
+      <p>I'll review your request and send back a price estimate within 24 hours. No surprises.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <h3>Print & Review</h3>
+      <p>Once approved, printing starts. You'll get a photo before pickup to confirm quality.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <h3>Pickup or Deliver</h3>
+      <p>Pickup in Abbotsford or local delivery arranged. Payment on pickup — cash or e-transfer.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+  <div class="section-tag">Let's Build Something</div>
+  <h2>Get a Quote</h2>
+  <div class="contact-inner">
+    <p class="contact-intro">Tell me what you're looking for. I'll get back to you with a quote within 24 hours. For urgent orders, note it in the message.</p>
+    <div class="contact-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Your Name</label>
+          <input type="text" placeholder="Alex M.">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" placeholder="alex@email.com">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>What do you need?</label>
+        <select>
+          <option>Print my STL file</option>
+          <option>Custom design + print</option>
+          <option>Replacement / functional part</option>
+          <option>Not sure yet</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Details</label>
+        <textarea rows="5" placeholder="Describe your project — size, colour, quantity, use case..."></textarea>
+      </div>
+      <button class="form-submit">Send Request →</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="logo">Layer<span>Up</span></div>
+  <p>© 2026 LayerUp — Abbotsford, BC</p>
+  <p>Custom 3D Printing Services</p>
+</footer>
+
+<script>
+  function updateMarkup() {
+    const v = document.getElementById('i-markup').value;
+    document.getElementById('lbl-markup').textContent = v + '%';
+  }
+
+  function fmt(n) {
+    return '$' + n.toFixed(2);
+  }
+
+  function calc() {
+    const hours  = parseFloat(document.getElementById('i-hours').value)   || 0;
+    const grams  = parseFloat(document.getElementById('i-grams').value)   || 0;
+    const filkg  = parseFloat(document.getElementById('i-filcost').value) || 0;
+    const elec   = parseFloat(document.getElementById('i-elec').value)    || 0;
+    const watts  = parseFloat(document.getElementById('i-watts').value)   || 0;
+    const labor  = parseFloat(document.getElementById('i-labor').value)   || 0;
+    const maint  = parseFloat(document.getElementById('i-maint').value)   || 0;
+    const markup = parseFloat(document.getElementById('i-markup').value)  || 0;
+
+    const filCost   = (grams / 1000) * filkg;
+    const elecCost  = (watts / 1000) * hours * elec;
+    const laborCost = hours * labor;
+    const maintCost = hours * maint;
+
+    const rawCost  = filCost + elecCost + laborCost + maintCost;
+    const price    = rawCost * (1 + markup / 100);
+    const profit   = price - rawCost;
+
+    document.getElementById('r-fil').textContent   = fmt(filCost);
+    document.getElementById('r-elec').textContent  = fmt(elecCost);
+    document.getElementById('r-labor').textContent = fmt(laborCost);
+    document.getElementById('r-maint').textContent = fmt(maintCost);
+    document.getElementById('r-cost').textContent  = fmt(rawCost);
+    document.getElementById('r-total').textContent = fmt(price);
+    document.getElementById('r-profit').textContent = fmt(profit);
+  }
+
+  calc();
+</script>
+</body>
+</html>
